@@ -18,38 +18,46 @@ print("The WAV files in the given folder are:\n")
 print(audioFiles)
 
 # Trying to simply read a wav file and store its sampling rate and waveform data
-fileName = 'carnatic.wav'
 sampleAudioDirectory = './Sample Audio/'
-(samplingRate, digitalSignal) = wp.read_wav_file(fileName, sampleAudioDirectory)
 
-# Trying to plot the last stored wav file using matplotlib
-"""wp.plot_wav_file(digitalSignal, samplingRate)"""
+for fileName in audioFiles :
 
-# Trying to write the last stored wav file into the Sample Audio directory
-"""wp.write_wav_file('written.wav', samplingRate, digitalSignal, './Sample Audio/')"""	
+	(samplingRate, digitalSignal) = wp.read_wav_file(fileName, sampleAudioDirectory)
 
-# Trying to transform the sample waveform into blocks
-digitalSignalBlocks = wp.wave_to_blocks(digitalSignal, samplingRate)
+	# Trying to plot the last stored wav file using matplotlib
+	"""wp.plot_wav_file(digitalSignal, samplingRate)"""
 
-fftWave = []
+	# Trying to write the last stored wav file into the Sample Audio directory
+	"""wp.write_wav_file('written.wav', samplingRate, digitalSignal, './Sample Audio/')"""	
 
-# Normalizing the input to make the project suitable for multiple audio files
-digitalSignal = wp.normalizing_float32(digitalSignal)
+	# The number of seconds per training example
+	clipLength = 10
 
-print("Max element: ", digitalSignal.max())
-# Performing FFT on a sample audio wave
-for block in digitalSignalBlocks :
-	fftWave.append(pyfftw.interfaces.numpy_fft.fft(block))
+	# Trying to transform the sample waveform into blocks
+	digitalSignalBlocks = wp.wave_to_blocks(digitalSignal, samplingRate, clipLength)
 
-"""print("order of fftWave: ", len(fftWave), " ", len(fftWave[0]))"""
+	fftWave = []
 
-# The number of seconds per training example
-clipLength = 10
+	# Normalizing the input to make the project suitable for multiple audio files
+	digitalSignal = wp.normalizing_float32(digitalSignal)
+
+	print("Max element: ", digitalSignal.max())
+	# Performing FFT on a sample audio wave
+	for block in digitalSignalBlocks :
+		fftWave.append(pyfftw.interfaces.numpy_fft.fft(block))
+
+	"""print("order of fftWave: ", len(fftWave), " ", len(fftWave[0]))"""
 
 
-# Plotting the Frequency spectrum of the audio signal
-"""wp.plot_fft(fftWave, samplingRate)"""
+	#Size of one FFT block
+	blockSize = len(fftWave[0])
+
+	wp.blocks_to_training_examples(fftWave, clipLength, blockSize, samplingRate)
 
 
-# Performing IFFT on a sample audio wave
-"""fftWaveInverse = pyfftw.interfaces.numpy_fft.ifft(fftWave)"""
+	# Plotting the Frequency spectrum of the audio signal
+	"""wp.plot_fft(fftWave, samplingRate)"""
+
+
+	# Performing IFFT on a sample audio wave
+	"""fftWaveInverse = pyfftw.interfaces.numpy_fft.ifft(fftWave)"""

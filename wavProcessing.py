@@ -43,7 +43,7 @@ def plot_fft(fftData, samplingRate) :
 	plt.show()
 
 
-def wave_to_blocks(digitalSignal, samplingRate) :
+def wave_to_blocks(digitalSignal, samplingRate, clipLength) :
 	# We first zero pad the wave to make sure blocks are of even size. Zero padding also increases the 
 	# number of data points in the time signal and hence the number of data points in the frequency 
 	# spectrum (due to the DFT equation). This, coupled with a constant sampling frequency, produces
@@ -51,7 +51,7 @@ def wave_to_blocks(digitalSignal, samplingRate) :
 
 	# index is used to loop through block sized chunks of the input data and convert it into blocks
 	index = 0 
-	blockSize = samplingRate/4
+	blockSize = int(samplingRate/4)
 	blocks = []
 
 	# Zero padding the signal before converting it into blocks
@@ -69,6 +69,15 @@ def wave_to_blocks(digitalSignal, samplingRate) :
 
 	print("block shape: ", len(blocks))
 
+	blocksPerClip = int((clipLength*samplingRate)/blockSize)
+
+	if(len(blocks)%blocksPerClip != 0) :
+		remainingBlocks = blocksPerClip - len(blocks)%blocksPerClip
+		for index in range(int(remainingBlocks)) :
+			blocks = np.concatenate([blocks, [np.zeros(int(blockSize))]])
+
+	print("new number: ", len(blocks))		
+
 	# Returning the list of all blocks
 	return blocks
 
@@ -79,4 +88,19 @@ def normalizing_float32(digitalSignal) :
 	
 	return normalizedWave
 
+def blocks_to_training_examples(fftBlocks, clipLength, blockSize, samplingRate) :
+	# Converts the blocks of FFT that we have into clips of training data that can be used 
+	# as input to the neural network
+
+	blocksPerClip = int((clipLength*samplingRate)/blockSize)
 	
+	print("no of fftBlocks: ", len(fftBlocks), "blocks per clip: ", blocksPerClip)
+
+	trainingExamples = []
+
+	index = 0
+	while index < clipLength:
+		trainingExamples.append(fftBlocks[index:index + blocksPerClip])
+		index += clipLength
+
+	print("shape of training examples: ", len(trainingExamples), " ", len(trainingExamples[0]), " ", len(trainingExamples[0][0]))	
