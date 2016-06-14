@@ -46,9 +46,10 @@ def plot_fft(fftData, samplingRate) :
 def wave_to_blocks(digitalSignal, samplingRate) :
 	# We first zero pad the wave to make sure blocks are of even size. Zero padding also increases the 
 	# number of data points in the time signal and hence the number of data points in the frequency 
-	# spectrum (due to the DFT equation)   
+	# spectrum (due to the DFT equation). This, coupled with a constant sampling frequency, produces
+	# a DFT output with more resolution   
 
-	# index is used to loop through block sized chunks of the input data
+	# index is used to loop through block sized chunks of the input data and convert it into blocks
 	index = 0 
 	blockSize = samplingRate/4
 	blocks = []
@@ -58,10 +59,7 @@ def wave_to_blocks(digitalSignal, samplingRate) :
 
 	print("Original size:", len(digitalSignal))	
 	digitalSignal = np.concatenate([digitalSignal, np.zeros(( (int(blockSize) - remainingSize), ))])
-	"""for index in range(int(blockSize) - remainingSize) :
-		digitalSignal = np.concatenate((digitalSignal, [0])) """
 	print("Padded size: ", len(digitalSignal))
-
 
 	# Actually "blocking" the signal
 	index = 0
@@ -73,3 +71,12 @@ def wave_to_blocks(digitalSignal, samplingRate) :
 
 	# Returning the list of all blocks
 	return blocks
+
+def normalizing_float32(digitalSignal) :
+	
+	# Simply normalize each data point and return the array
+	normalizedWave = digitalSignal.astype('float32')/32767.0
+	
+	return normalizedWave
+
+	

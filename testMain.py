@@ -28,23 +28,24 @@ sampleAudioDirectory = './Sample Audio/'
 # Trying to write the last stored wav file into the Sample Audio directory
 """wp.write_wav_file('written.wav', samplingRate, digitalSignal, './Sample Audio/')"""	
 
-
-    	
 # Trying to transform the sample waveform into blocks
 digitalSignalBlocks = wp.wave_to_blocks(digitalSignal, samplingRate)
 
 fftWave = []
 
+# Normalizing the input to make the project suitable for multiple audio files
+digitalSignal = wp.normalizing_float32(digitalSignal)
+
+print("Max element: ", digitalSignal.max())
 # Performing FFT on a sample audio wave
 for block in digitalSignalBlocks :
 	fftWave.append(pyfftw.interfaces.numpy_fft.fft(block))
 
-print("order of fftWave: ", len(fftWave), " ", len(fftWave[0]) ) 
+"""print("order of fftWave: ", len(fftWave), " ", len(fftWave[0]))"""
+
 # The number of seconds per training example
+clipLength = 10
 
-
-
-	
 
 # Plotting the Frequency spectrum of the audio signal
 """wp.plot_fft(fftWave, samplingRate)"""
