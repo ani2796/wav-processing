@@ -39,8 +39,12 @@ fftWave = []
 for block in digitalSignalBlocks :
 	fftWave.append(pyfftw.interfaces.numpy_fft.fft(block))
 
-print(fftWave)
-print(len(fftWave), " ", len(fftWave[0]), " ", len(fftWave[0][0]))	
+print("order of fftWave: ", len(fftWave), " ", len(fftWave[0]) ) 
+# The number of seconds per training example
+
+
+
+	
 
 # Plotting the Frequency spectrum of the audio signal
 """wp.plot_fft(fftWave, samplingRate)"""
