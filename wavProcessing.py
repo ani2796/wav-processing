@@ -29,10 +29,19 @@ def plot_wav_file(wavFileData, samplingRate) :
 
 # The below method takes a complex list as its input and plots the magnitude of the 
 # transformed wave in the frequency domain
+
+
+
 def plot_fft(fftData, samplingRate) :
 	# Set time axis range for easier understanding
-	timeRange = np.arange(fftData.size)/float(samplingRate)
-	
+	fftDataCopy = []
+
+	"""for block in fftData :
+		for index in range(len(block)) :
+			fftDataCopy.append(block[index])"""
+
+	timeRange = np.arange(0, 44100, 44100.0/len(fftData))
+
 	# Calculating the amplitude of each frequency
 	amplitude = []
 	for index in range(len(fftData)) :
@@ -41,6 +50,8 @@ def plot_fft(fftData, samplingRate) :
 	# Plotting the DFT	
 	plt.plot(timeRange, amplitude)
 	plt.show()
+
+
 
 
 def wave_to_blocks(digitalSignal, samplingRate, clipLength) :
@@ -81,12 +92,16 @@ def wave_to_blocks(digitalSignal, samplingRate, clipLength) :
 	# Returning the list of all blocks
 	return blocks
 
+
+
 def normalizing_float32(digitalSignal) :
 	
 	# Simply normalize each data point and return the array
 	normalizedWave = digitalSignal.astype('float32')/32767.0
 	
 	return normalizedWave
+
+
 
 def blocks_to_training_examples(fftBlocks, clipLength, blockSize, samplingRate) :
 	# Converts the blocks of FFT that we have into clips of training data that can be used 
@@ -104,3 +119,5 @@ def blocks_to_training_examples(fftBlocks, clipLength, blockSize, samplingRate) 
 		index += clipLength
 
 	print("shape of training examples: ", len(trainingExamples), " ", len(trainingExamples[0]), " ", len(trainingExamples[0][0]))	
+
+	return trainingExamples
