@@ -1,65 +1,74 @@
 # This module is a clay module used to test all other modules. It is subject to 
 # change depending on my current project.
 
-import wavProcessing as wp
+import wavProcessing as wP
 import os
 from scipy.fftpack import fft, ifft
 import numpy as np
 import pyfftw
+import matplotlib.pyplot as plt
+
+pyfftw.interfaces.cache.enable()
 
 audioFiles = []
 
-# Storing names of all the WAV files in the audioFiles list and just displaying their names
-for sampleFile in os.listdir("./Sample Audio") :
-	if(sampleFile.endswith("wav")) :
+sampleAudioDirectory = './Sample Audio/'
+
+for sampleFile in os.listdir(sampleAudioDirectory) :
+	if(sampleFile.endswith(".wav")) :
 		audioFiles.append(sampleFile)
 
 print("The WAV files in the given folder are:\n")
-print(audioFiles)
-
-# Trying to simply read a wav file and store its sampling rate and waveform data
-sampleAudioDirectory = './Sample Audio/'
-
-index = 0
-fftWave = []
+print(audioFiles, "\n\n")
 
 for fileName in audioFiles :
+	(digitalSignal, samplingRate) = wP.read_wav_file(fileName, sampleAudioDirectory)
+	signalSize = len(digitalSignal)
 
-	(samplingRate, digitalSignal) = wp.read_wav_file(fileName, sampleAudioDirectory)
+	print("No. of audio samples in ", fileName, " is ", len(digitalSignal))
 
-	# Trying to plot the last stored wav file using matplotlib
-	wp.plot_wav_file(digitalSignal, samplingRate)
+	paddingZeros = np.zeros(2*len(digitalSignal))
+	paddedSignal = np.concatenate((digitalSignal, paddingZeros), )
 
-	# Trying to write the last stored wav file into the Sample Audio directory
-	"""wp.write_wav_file('written.wav', samplingRate, digitalSignal, './Sample Audio/')"""	
+	print("Sample point ", 2000, " before fft for ", fileName, " is ", digitalSignal[2000])
 
-	# The number of seconds per training example
-	clipLength = 10
+	digitalSignal = wP.normalize_float32(digitalSignal)
+	paddedSignal = wP.normalize_float32(paddedSignal)
 
-	# Trying to transform the sample waveform into blocks
-	digitalSignalBlocks = wp.wave_to_blocks(digitalSignal, samplingRate, clipLength)
+	fftSignal1 = pyfftw.interfaces.numpy_fft.fft(digitalSignal)
+	fftSignal2 = pyfftw.interfaces.numpy_fft.fft(paddedSignal)
 
-	# Normalizing the input to make the project suitable for multiple audio files
-	digitalSignal = wp.normalizing_float32(digitalSignal)
+	# wP.plot_fft(fftSignal1, signalSize, 'NORMAL')
+	# wP.plot_fft(fftSignal2, signalSize, 'PADDED')
 
-	print("Max element: ", digitalSignal.max())
-	# Performing FFT on a sample audio wave
-	for block in digitalSignalBlocks :
-		fftWave.append(pyfftw.interfaces.numpy_fft.fft(block))
+	plt.figure(1)
 
-	print(len(fftWave), " ", len(fftWave[index]))	
-	# Plotting the Frequency spectrum of the audio signal
-	wp.plot_fft(fftWave[index], samplingRate)	
-	"""print("order of fftWave: ", len(fftWave), " ", len(fftWave[0]))"""
+	normalFreq = np.arange(len(fftSignal1))
+	plt.subplot(211)
+	plt.plot(normalFreq, fftSignal1)
+	
+	paddedFreq = np.arange(0, len(fftSignal1), float(len(fftSignal1)/len(fftSignal2)))
+	plt.subplot(212)
+	plt.plot(paddedFreq, fftSignal2)
 
-	index += 1
+	plt.show()	
 
-#Size of one FFT block
-blockSize = len(fftWave[0])
+	"""print("No. of frequency points in the regular fft of ", fileName, " is ", len(fftSignal1))
+	print("Sample frequency point ", 2000, " of ", fileName,  " has value ", fftSignal1[2000])
+	print("No. of frequency points of the padded fft of ", fileName, " is ", len(fftSignal2))
+	print("Sample frequency point ", 2000, " of ", fileName, " is ", fftSignal2[2000]) """
 
-# Converting blocks to training examples with blocks of clip length
-wp.blocks_to_training_examples(fftWave, clipLength, blockSize, samplingRate)
+	reformedSignal1 = np.real(pyfftw.interfaces.numpy_fft.ifft(fftSignal1))
+	reformedSignal2 = np.real(pyfftw.interfaces.numpy_fft.ifft(fftSignal2))
 
+	reformedSignal1 = wP.denormalize_float32(reformedSignal1)
+	reformedSignal2 = wP.denormalize_float32(reformedSignal2)
 
-# Performing IFFT on a sample audio wave
-"""fftWaveInverse = pyfftw.interfaces.numpy_fft.ifft(fftWave)"""
+	"""print("No. of reconverted audio samples in ", fileName, " with no zero padding is ", len(reformedSignal1))
+	print("No. of reconverted audio samples in ", fileName, " with zero padding is ", len(reformedSignal2), "\n\n")	"""	
+
+	print("Sample point ", 2000, " after fft for ", fileName, " (without zero padding) is ", reformedSignal1[2000])
+	print("Sample point ", 2000, " before fft for ", fileName, " (with zero padding) is ", reformedSignal2[2000], "\n\n")
+
+	wP.write_wav_file(fileName[:-4] + " changed.wav", digitalSignal, samplingRate, sampleAudioDirectory)
+	os.remove(sampleAudioDirectory + fileName[:-4] + " changed.wav")
