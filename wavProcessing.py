@@ -172,3 +172,4 @@ def fft_and_blocks_and_chunks(audioFiles, sampleAudioDirectory) :
 	print("fftBlocksInput: ", len(fftBlocksInput), " ", len(fftBlocksInput[0]))
 	print("No. of chunks:", len(chunksInput), " ", len(chunksInput[0]), " ", len(chunksInput[0][0]))	
 
+	return chunksInput, chunksOutput
