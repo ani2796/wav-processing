@@ -1,0 +1,6 @@
+Here are some of the observations I have made on working with audio files:
+
+1) Zero padding does not affect the inverse fourier transform. The signal gotten back is identical.
+2) pyfftw does not require you to denormalize a signal after you perform an IFFT. If you do denormalize the signal, you get a signal
+   amplified to a point of near noise.
+3) The FFT of the normal and the zero padded file need not be the same.

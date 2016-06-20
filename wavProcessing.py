@@ -7,7 +7,7 @@ import scipy.io.wavfile as wav
 import matplotlib.pyplot as plt
 import numpy as np
 import math
-
+import pyfftw
 
 
 # The below method reads the data within a WAV file and returns a list of the data elements
@@ -57,14 +57,87 @@ def normalize_float32(digitalSignal) :
 	
 	return normalizedWave
 
-def denormalize_float32(digitalSignal) :
-	
-	# Simply denormalize each data point and return the array
-	denormalizedWave = digitalSignal.astype('float32')*32767.0 
-
-	return denormalizedWave
 
 
+def signal_to_blocks(digitalSignal) :
+	blockSize = 11025
+	index = 0
+	blocks = []
 
-# def blocks_to_training_examples(fftBlocks, clipLength, blockSize, samplingRate) :
-	
+	while((index+blockSize)<len(digitalSignal)) :
+		blocks.append(digitalSignal[index:index + blockSize])
+		index += blockSize
+	appendedZeros = np.zeros(blockSize - (len(digitalSignal) - index))
+	lastBlock = np.concatenate((digitalSignal[index:len(digitalSignal)], appendedZeros), )	
+	blocks.append(lastBlock)
+
+	print("Size of new digital signal: ", len(blocks)*blockSize)
+
+	return blocks
+
+
+
+def blocks_to_examples(blocks) :
+	trainingExamples = []
+	blocksPerExample = 40
+	index = 0
+
+	while((index+blocksPerExample) < len(blocks)) :
+		trainingExamples.append(blocks[index:index + blocksPerExample])
+		index += blocksPerExample
+		
+		
+
+def fft_and_blocks(audioFiles, sampleAudioDirectory) :
+
+	fftBlocksInput = []
+	fftBlocksOutput = []
+
+	for fileName in audioFiles :
+		(digitalSignal, samplingRate) = read_wav_file(fileName, sampleAudioDirectory)
+		signalSize = len(digitalSignal)
+
+		print("No. of audio samples in ", fileName, " is ", len(digitalSignal))
+
+		inputBlocks = signal_to_blocks(digitalSignal)
+		blockSize = len(inputBlocks[0])
+
+		for block in inputBlocks :
+			block = normalize_float32(block)		
+			fftBlocksInput.append(pyfftw.interfaces.numpy_fft.fft(block))
+
+		fftBlocksOutput = fftBlocksInput[1:]	
+		fftBlocksOutput.append(np.zeros(blockSize))
+
+		
+
+		digitalSignal = normalize_float32(digitalSignal)
+		fftSignal = pyfftw.interfaces.numpy_fft.fft(digitalSignal)
+		
+		figure = plt.figure(1)
+
+		freqRange = np.arange(44100)
+		timeRange = np.arange(len(digitalSignal))
+
+		plt.subplot(211)
+		plt.plot(timeRange, digitalSignal)
+		plt.title('Before FFT')
+		plt.xlabel('time')
+		plt.ylabel('pressure')
+		
+		plt.subplot(212)
+		plt.plot(freqRange, np.real(fftSignal[:44100]**2 + np.imag(fftSignal[:44100])**2))
+		plt.title('After FFT')
+		plt.xlabel('frequency')
+		plt.ylabel('amplitude')
+
+		figure.subplots_adjust(hspace=.5)
+
+		plt.show()	
+
+		print("\n\n")
+
+		# write_wav_file(fileName[:-4] + " changed.wav", reformedSignal, samplingRate, sampleAudioDirectory)
+		# os.remove(sampleAudioDirectory + fileName[:-4] + " changed.wav")
+
+
