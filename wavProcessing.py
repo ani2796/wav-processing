@@ -109,29 +109,37 @@ def fft_and_blocks(audioFiles, sampleAudioDirectory) :
 		fftBlocksOutput = fftBlocksInput[1:]	
 		fftBlocksOutput.append(np.zeros(blockSize))
 
-		
-
 		digitalSignal = normalize_float32(digitalSignal)
 		fftSignal = pyfftw.interfaces.numpy_fft.fft(digitalSignal)
 		
+		paddedSignal = np.concatenate((digitalSignal, np.zeros(1000000)),) 
+		fftSignalPadded = pyfftw.interfaces.numpy_fft.fft(paddedSignal)
+
 		figure = plt.figure(1)
 
 		freqRange = np.arange(44100)
 		timeRange = np.arange(len(digitalSignal))
+		paddedRange = np.arange(0, 44100, len(digitalSignal)/len(paddedSignal))
 
-		plt.subplot(211)
+		plt.subplot(311)
 		plt.plot(timeRange, digitalSignal)
 		plt.title('Before FFT')
 		plt.xlabel('time')
 		plt.ylabel('pressure')
 		
-		plt.subplot(212)
-		plt.plot(freqRange, np.real(fftSignal[:44100]**2 + np.imag(fftSignal[:44100])**2))
+		plt.subplot(312)
+		plt.plot(freqRange, np.real(fftSignal[:44100])**2 + np.imag(fftSignal[:44100])**2)
 		plt.title('After FFT')
 		plt.xlabel('frequency')
 		plt.ylabel('amplitude')
 
-		figure.subplots_adjust(hspace=.5)
+		plt.subplot(313)
+		plt.plot(paddedRange, np.real(fftSignalPadded[:len(paddedRange)])**2 + np.imag(fftSignalPadded[:len(paddedRange)])**2)
+		plt.title('Padded signal\'s FFT')
+		plt.xlabel('frequency')
+		plt.ylabel('amplitude')
+
+		figure.subplots_adjust(hspace=.75)
 
 		plt.show()	
 
