@@ -85,10 +85,27 @@ def blocks_to_examples(blocks) :
 	while((index+blocksPerExample) < len(blocks)) :
 		trainingExamples.append(blocks[index:index + blocksPerExample])
 		index += blocksPerExample
-		
-		
 
-def fft_and_blocks(audioFiles, sampleAudioDirectory) :
+	""""zeroBlocks = np.zeros((blocksPerExample - (len(blocks) - index), int(len(blocks[0]))))
+	blocks.append(zeroBlocks)
+	trainingExamples.append(blocks[index:index + blocksPerExample])"""
+
+	return trainingExamples	
+
+
+
+def get_audio_from_dir(sampleAudioDirectory) :
+	audioFiles = []
+
+	for sampleFile in os.listdir(sampleAudioDirectory) :
+		if(sampleFile.endswith(".wav")) :
+			audioFiles.append(sampleFile)
+
+	return audioFiles		
+
+
+
+def fft_and_blocks_and_chunks(audioFiles, sampleAudioDirectory) :
 
 	fftBlocksInput = []
 	fftBlocksOutput = []
@@ -139,7 +156,7 @@ def fft_and_blocks(audioFiles, sampleAudioDirectory) :
 		plt.xlabel('frequency')
 		plt.ylabel('amplitude')
 
-		figure.subplots_adjust(hspace=.75)
+		figure.subplots_adjust(hspace=1.00)
 
 		plt.show()	
 
@@ -148,4 +165,10 @@ def fft_and_blocks(audioFiles, sampleAudioDirectory) :
 		# write_wav_file(fileName[:-4] + " changed.wav", reformedSignal, samplingRate, sampleAudioDirectory)
 		# os.remove(sampleAudioDirectory + fileName[:-4] + " changed.wav")
 
+
+	chunksInput = blocks_to_examples(fftBlocksInput)
+	chunksOutput = blocks_to_examples(fftBlocksOutput)
+
+	print("fftBlocksInput: ", len(fftBlocksInput), " ", len(fftBlocksInput[0]))
+	print("No. of chunks:", len(chunksInput), " ", len(chunksInput[0]), " ", len(chunksInput[0][0]))	
 
